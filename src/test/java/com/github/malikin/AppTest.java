@@ -36,7 +36,7 @@ public class AppTest {
 
   @Test
   public void userCreateAndGetTest() {
-    String user = "{\"name\":\"TestUser\", \"accountId\":1000}";
+    String user = "{\"name\":\"TestUser\"}";
 
     post("/user", user).then().assertThat().statusCode(201).contentType(ContentType.JSON);
   }
