@@ -1,6 +1,6 @@
 package com.github.malikin.dao;
 
-import com.github.malikin.dto.User;
+import com.github.malikin.dto.Account;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
@@ -10,17 +10,17 @@ import org.skife.jdbi.v2.sqlobject.helpers.MapResultAsBean;
 
 import java.util.List;
 
-public interface UserRepository {
+public interface AccountRepository {
 
-    @SqlQuery("select * from user")
+    @SqlQuery("select * from account")
     @MapResultAsBean
-    List<User> findAll();
+    List<Account> findAll();
 
-    @SqlQuery("select * from user where id = :id")
+    @SqlQuery("select * from account where id = :id")
     @MapResultAsBean
-    User findUserById(@Bind("id") Long id);
+    Account findAccountById(@Bind("id") Long id);
 
-    @SqlUpdate("insert into user (name) values (:user.name)")
+    @SqlUpdate("insert into account (name) values (:account.name)")
     @GetGeneratedKeys
-    Long addUser(@BindBean("user") User user);
+    Long addAccount(@BindBean("account") Account account);
 }

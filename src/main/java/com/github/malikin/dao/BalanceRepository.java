@@ -9,10 +9,10 @@ import org.skife.jdbi.v2.sqlobject.helpers.MapResultAsBean;
 
 public interface BalanceRepository {
 
-    @SqlQuery("select user_id as userId, amount from balance where user_id = :id")
+    @SqlQuery("select account_id as accountId, amount from balance where account_id = :id")
     @MapResultAsBean
-    Balance findBalanceByUserId(@Bind("id") Long id);
+    Balance findBalanceByAccountId(@Bind("id") Long id);
 
-    @SqlUpdate("insert into balance (user_id, amount) values (:balance.userId, :balance.amount)")
+    @SqlUpdate("insert into balance (account_id, amount) values (:balance.accountId, :balance.amount)")
     void addBalance(@BindBean("balance") Balance balance);
 }

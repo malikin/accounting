@@ -1,7 +1,7 @@
 package com.github.malikin;
 
 import com.github.malikin.rest.BalanceController;
-import com.github.malikin.rest.UserController;
+import com.github.malikin.rest.AccountController;
 import com.typesafe.config.Config;
 import org.jooby.Jooby;
 import org.jooby.jdbc.Jdbc;
@@ -27,7 +27,7 @@ public class App extends Jooby {
                 )
         );
 
-        use(UserController.class);
+        use(AccountController.class);
         use(BalanceController.class);
     }
 

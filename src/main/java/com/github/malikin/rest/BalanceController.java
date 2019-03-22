@@ -3,6 +3,7 @@ package com.github.malikin.rest;
 import com.github.malikin.dao.BalanceRepository;
 import com.github.malikin.dto.Balance;
 import com.google.inject.Inject;
+import org.jooby.Err;
 import org.jooby.Result;
 import org.jooby.Results;
 import org.jooby.Status;
@@ -22,13 +23,18 @@ public class BalanceController {
         this.dbi = dbi;
     }
 
-    @Path("/:userId")
     @GET
-    public Balance getBalanceByUserId(final Long userId) {
-        return dbi.inTransaction((handle, status) -> {
+    public Balance getBalanceByAccountId(final Long accountId) {
+        Balance balance = dbi.inTransaction((handle, status) -> {
             BalanceRepository repository = handle.attach(BalanceRepository.class);
-            return repository.findBalanceByUserId(userId);
+            return repository.findBalanceByAccountId(accountId);
         });
+
+        if (balance == null) {
+            throw new Err(Status.NOT_FOUND);
+        }
+
+        return balance;
     }
 
     @POST

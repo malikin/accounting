@@ -10,9 +10,6 @@ import org.jooby.test.MockRouter;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-/**
- * @author jooby generator
- */
 public class AppTest {
 
     /**
@@ -23,8 +20,11 @@ public class AppTest {
     public static JoobyRule app = new JoobyRule(new App());
 
     @Test
-    public void getAllUsersTest() {
-        get("/user")
+    public void getAllAccountsTest() {
+        given()
+                .accept(ContentType.JSON)
+                .when()
+                .get("/account")
                 .then()
                 .assertThat()
                 .statusCode(200)
@@ -32,13 +32,27 @@ public class AppTest {
     }
 
     @Test
-    public void userCreateTest() {
-        String user = "{\"name\":\"TestUser\"}";
+    public void getNonExistAccountTest() {
 
         given()
-                .contentType(ContentType.JSON).body(user)
+                .accept(ContentType.JSON)
                 .when()
-                .post("/user")
+                .get("/account/100")
+                .then()
+                .assertThat()
+                .statusCode(404);
+    }
+
+    @Test
+    public void createAccountTest() {
+        String account = "{\"name\":\"TestAccount\"}";
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(account)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/account")
                 .then()
                 .assertThat()
                 .statusCode(201)

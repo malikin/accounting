@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Balance {
 
-    private Long userId;
+    private Long accountId;
     private Double amount;
 }
