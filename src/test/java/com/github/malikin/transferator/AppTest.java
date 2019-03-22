@@ -1,4 +1,4 @@
-package com.github.malikin;
+package com.github.malikin.transferator;
 
 import static io.restassured.RestAssured.get;
 import static io.restassured.RestAssured.given;

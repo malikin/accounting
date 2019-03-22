@@ -1,6 +1,6 @@
-package com.github.malikin.dao;
+package com.github.malikin.transferator.dao;
 
-import com.github.malikin.dto.Transaction;
+import com.github.malikin.transferator.dto.Transaction;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;

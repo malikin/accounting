@@ -1,7 +1,7 @@
-package com.github.malikin.rest;
+package com.github.malikin.transferator.rest;
 
-import com.github.malikin.dao.AccountRepository;
-import com.github.malikin.dto.Account;
+import com.github.malikin.transferator.dao.AccountRepository;
+import com.github.malikin.transferator.dto.Account;
 import com.google.inject.Inject;
 import org.jooby.Err;
 import org.jooby.Result;

@@ -1,4 +1,4 @@
-package com.github.malikin.dto;
+package com.github.malikin.transferator.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

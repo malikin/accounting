@@ -1,6 +1,6 @@
-package com.github.malikin.dao;
+package com.github.malikin.transferator.dao;
 
-import com.github.malikin.dto.Account;
+import com.github.malikin.transferator.dto.Account;
 import org.skife.jdbi.v2.sqlobject.Bind;
 import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;

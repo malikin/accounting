@@ -1,7 +1,7 @@
-package com.github.malikin;
+package com.github.malikin.transferator;
 
-import com.github.malikin.rest.BalanceController;
-import com.github.malikin.rest.AccountController;
+import com.github.malikin.transferator.rest.BalanceController;
+import com.github.malikin.transferator.rest.AccountController;
 import com.typesafe.config.Config;
 import org.jooby.Jooby;
 import org.jooby.jdbc.Jdbc;
