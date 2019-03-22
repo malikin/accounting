@@ -3,6 +3,9 @@ package com.github.malikin.rest;
 import com.github.malikin.dao.UserRepository;
 import com.github.malikin.dto.User;
 import com.google.inject.Inject;
+import org.jooby.Result;
+import org.jooby.Results;
+import org.jooby.Status;
 import org.jooby.mvc.Body;
 import org.jooby.mvc.GET;
 import org.jooby.mvc.POST;
@@ -39,10 +42,11 @@ public class UserController {
     }
 
     @POST
-    public Long createUser(@Body final User userDto) {
+    public Result createUser(@Body final User userDto) {
         return dbi.inTransaction((handle, status) -> {
             UserRepository repository = handle.attach(UserRepository.class);
-            return repository.addUser(userDto);
+            Long id = repository.addUser(userDto);
+            return Results.with(id, Status.CREATED);
         });
     }
 }

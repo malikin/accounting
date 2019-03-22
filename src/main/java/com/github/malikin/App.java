@@ -1,5 +1,6 @@
 package com.github.malikin;
 
+import com.github.malikin.rest.BalanceController;
 import com.github.malikin.rest.UserController;
 import com.typesafe.config.Config;
 import org.jooby.Jooby;
@@ -27,6 +28,7 @@ public class App extends Jooby {
         );
 
         use(UserController.class);
+        use(BalanceController.class);
     }
 
     public static void main(final String[] args) {

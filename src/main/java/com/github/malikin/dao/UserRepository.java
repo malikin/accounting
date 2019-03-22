@@ -8,10 +8,9 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.helpers.MapResultAsBean;
 
-import java.io.Closeable;
 import java.util.List;
 
-public interface UserRepository extends Closeable {
+public interface UserRepository {
 
     @SqlQuery("select * from user")
     @MapResultAsBean
