@@ -1,19 +1,19 @@
 [![Build Status](https://travis-ci.org/malikin/transferator.svg?branch=master)](https://travis-ci.org/malikin/transferator)
 [![codecov](https://codecov.io/gh/malikin/transferator/branch/master/graph/badge.svg)](https://codecov.io/gh/malikin/transferator)
 
-##TRANSFERATOR
+## TRANSFERATOR
 
 Test application based on jooby framework.
 REST API for money transfers between accounts.
 
-####How to start application (will start on http://localhost:8080/):
+#### How to start application (will start on http://localhost:8080/):
 
 ```
 $ mvn package
 $ java -jar target/transferator-1.0-SNAPSHOT.jar
 ```
 
-####List of API endpoints and available HTTP methods:
+#### List of API endpoints and available HTTP methods:
 
 ```
 POST /account
@@ -26,9 +26,9 @@ POST /transaction
 GET  /transaction/:operationUuid
 ```
 
-####How to use:
+#### How to use:
 
-#####Add new account with name "Test" (will be created with 0 balance)
+##### Add new account with name "Test" (will be created with 0 balance)
 
 ```
 curl -X POST \
@@ -38,7 +38,7 @@ curl -X POST \
   -d '{"name": "Test"}'
 ```
 
-#####Get account by Id
+##### Get account by Id
 
 ```
 curl -X GET \
@@ -46,7 +46,7 @@ curl -X GET \
   -H 'Accept: application/json'
 ```
 
-#####Get account by name
+##### Get account by name
 
 ```
 curl -X GET \
@@ -54,7 +54,7 @@ curl -X GET \
   -H 'Accept: application/json'
 ```
 
-#####Get account balance
+##### Get account balance
 
 ```
 curl -X GET \
@@ -62,7 +62,7 @@ curl -X GET \
   -H 'Accept: application/json'
 ```
 
-#####Get account transactions
+##### Get account transactions
 
 ```
 curl -X GET \
@@ -70,7 +70,7 @@ curl -X GET \
   -H 'Accept: application/json'
 ```
 
-#####Transfer 100 coins from account 1 to account 2
+##### Transfer 100 coins from account 1 to account 2
 
 ```
 curl -X POST \
@@ -84,7 +84,7 @@ curl -X POST \
       }'
 ```
 
-#####Describe transfer operation by operationUUID
+##### Describe transfer operation by operationUUID
 
 ```
 curl -X GET \
