@@ -48,6 +48,14 @@ public class AppTest {
                 .then()
                 .assertThat()
                 .statusCode(404);
+
+        given()
+                .accept(ContentType.JSON)
+                .when()
+                .get("/account?name=TestAccountNotExist")
+                .then()
+                .assertThat()
+                .statusCode(404);
     }
 
     @Test
@@ -101,6 +109,32 @@ public class AppTest {
                 .then()
                 .assertThat()
                 .statusCode(400);
+    }
+
+    @Test
+    public void createAccountAndFindByIdTest() {
+        String account = "{\"name\":\"TestAccountFindById\"}";
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(account)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/account")
+                .then()
+                .assertThat()
+                .statusCode(201)
+                .contentType(ContentType.JSON);
+
+        Account accountCreated = get("/account?name=TestAccountFindById").as(Account.class);
+
+        given()
+                .accept(ContentType.JSON)
+                .when()
+                .get(String.format("/account/%d", accountCreated.getId()))
+                .then()
+                .assertThat()
+                .statusCode(200);
     }
 
     @Test
@@ -223,5 +257,16 @@ public class AppTest {
                 .then()
                 .assertThat()
                 .statusCode(400);
+    }
+
+    @Test
+    public void getNonExistTransactionByOperationUuidTest() {
+        given()
+                .accept(ContentType.JSON)
+                .when()
+                .get("/transaction/0000-0000-0000")
+                .then()
+                .assertThat()
+                .statusCode(404);
     }
 }

@@ -33,7 +33,7 @@ public class AccountController {
     @Path("/:id")
     @GET
     public Account getAccountById(final Long id) {
-        Account account =  jdbi.inTransaction(handle -> {
+        Account account =  jdbi.withHandle(handle -> {
             AccountRepository repository = handle.attach(AccountRepository.class);
             return repository.findAccountById(id);
         });
@@ -49,13 +49,13 @@ public class AccountController {
     public Result getAccountByName(final Optional<String> name) {
 
         if (!name.isPresent()) {
-            return jdbi.inTransaction(handle -> {
+            return jdbi.withHandle(handle -> {
                 AccountRepository repository = handle.attach(AccountRepository.class);
                 return Results.with(repository.findAll());
             });
         }
 
-        Account account =  jdbi.inTransaction(handle -> {
+        Account account =  jdbi.withHandle(handle -> {
             AccountRepository repository = handle.attach(AccountRepository.class);
             return repository.findAccountByName(name.get());
         });
@@ -89,7 +89,7 @@ public class AccountController {
     @Path(":accountId/balance")
     @GET
     public Balance getBalanceByAccountId(final Long accountId) {
-        Balance balance = jdbi.inTransaction(handle -> {
+        Balance balance = jdbi.withHandle(handle -> {
             BalanceRepository repository = handle.attach(BalanceRepository.class);
             return repository.findBalanceByAccountId(accountId);
         });
@@ -104,7 +104,7 @@ public class AccountController {
     @Path(":accountId/transactions")
     @GET
     public Set<Transaction> getTransactionsByAccountId(final Long accountId) {
-        return jdbi.inTransaction(handle -> {
+        return jdbi.withHandle(handle -> {
             TransactionRepository repository = handle.attach(TransactionRepository.class);
             return repository.findTransactionsByAccountId(accountId);
         });

@@ -37,7 +37,7 @@ public class TransactionController {
     @Path(":operationUuid")
     @GET
     public Set<Transaction> getTransactionByOperationUuid(final String operationUuid) {
-        Set<Transaction> transactions = jdbi.inTransaction(handle -> {
+        Set<Transaction> transactions = jdbi.withHandle(handle -> {
             TransactionRepository repository = handle.attach(TransactionRepository.class);
             return repository.findTransactionsByOperationUuid(operationUuid);
         });

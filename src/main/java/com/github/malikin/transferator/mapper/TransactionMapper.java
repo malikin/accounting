@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.util.UUID;
 
 public class TransactionMapper implements RowMapper<Transaction> {
+
     @Override
     public Transaction map(ResultSet rs, StatementContext ctx) throws SQLException {
         return new Transaction(
