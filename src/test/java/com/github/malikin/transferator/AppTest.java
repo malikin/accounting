@@ -6,11 +6,15 @@ import static org.junit.Assert.assertEquals;
 
 import com.github.malikin.transferator.dto.Account;
 import com.github.malikin.transferator.dto.Balance;
+import com.github.malikin.transferator.dto.Transaction;
 import io.restassured.http.ContentType;
 import org.jooby.test.JoobyRule;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class AppTest {
 
@@ -41,6 +45,17 @@ public class AppTest {
                 .accept(ContentType.JSON)
                 .when()
                 .get("/account/100")
+                .then()
+                .assertThat()
+                .statusCode(404);
+    }
+
+    @Test
+    public void getNonExistAccountBalanceTest() {
+        given()
+                .accept(ContentType.JSON)
+                .when()
+                .get("/account/100/balance")
                 .then()
                 .assertThat()
                 .statusCode(404);
@@ -105,7 +120,7 @@ public class AppTest {
 
         Account accountCreated = get("/account?name=TestAccountEmptyBalance").as(Account.class);
 
-        Balance balance = get(String.format("/balance?accountId=%d", accountCreated.getId())).as(Balance.class);
+        Balance balance = get(String.format("/account/%d/balance", accountCreated.getId())).as(Balance.class);
 
         assertEquals(0D, balance.getAmount(), 0.01);
     }
@@ -127,9 +142,9 @@ public class AppTest {
 
         Account accountCreated = get("/account?name=TestAccountWithBalance").as(Account.class);
 
-        Balance balance = get(String.format("/balance?accountId=%d", accountCreated.getId())).as(Balance.class);
+        Balance balance = get(String.format("/account/%d/balance", accountCreated.getId())).as(Balance.class);
 
-        assertEquals(0D, balance.getAmount(), 0.001);
+        assertEquals("Balance is empty", 0D, balance.getAmount(), 0.001);
 
         String transferOperation = "{\"senderId\": " + BANK_ACCOUNT_ID + ", \"recipientId\": " + accountCreated.getId()  + ", \"amount\": 100 }";
 
@@ -143,18 +158,26 @@ public class AppTest {
                 .assertThat()
                 .statusCode(201);
 
-        balance = get(String.format("/balance?accountId=%d", accountCreated.getId())).as(Balance.class);
+        balance = get(String.format("/account/%d/balance", accountCreated.getId())).as(Balance.class);
 
-        assertEquals(100D, balance.getAmount(), 0.001);
+        assertEquals("Bank presented 100 coins", 100D, balance.getAmount(), 0.001);
 
         given()
                 .accept(ContentType.JSON)
                 .when()
-                .get(String.format("/transaction?accountId=%d", accountCreated.getId()))
+                .get(String.format("/account/%d/transactions", accountCreated.getId()))
                 .then()
                 .assertThat()
                 .statusCode(200)
                 .contentType(ContentType.JSON);
+
+        List<Transaction> transactions = Arrays.asList(get(String.format("/account/%d/transactions", accountCreated.getId())).as(Transaction[].class));
+
+        assertEquals("Should be two records about one operation", 2, transactions.size());
+
+        List<Transaction> transactionsByUuid = Arrays.asList(get(String.format("/transaction/%s", transactions.get(0).getOperationUuid().toString())).as(Transaction[].class));
+
+        assertEquals("Should be two records about one operation", 2, transactionsByUuid.size());
     }
 
     @Test

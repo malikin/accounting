@@ -2,8 +2,10 @@ package com.github.malikin.transferator.rest;
 
 import com.github.malikin.transferator.dao.AccountRepository;
 import com.github.malikin.transferator.dao.BalanceRepository;
+import com.github.malikin.transferator.dao.TransactionRepository;
 import com.github.malikin.transferator.dto.Account;
 import com.github.malikin.transferator.dto.Balance;
+import com.github.malikin.transferator.dto.Transaction;
 import com.google.inject.Inject;
 import org.jdbi.v3.core.Jdbi;
 import org.jooby.Err;
@@ -16,6 +18,7 @@ import org.jooby.mvc.POST;
 import org.jooby.mvc.Path;
 
 import java.util.Optional;
+import java.util.Set;
 
 @Path("/account")
 public class AccountController {
@@ -80,6 +83,30 @@ public class AccountController {
             balanceRepository.addBalance(new Balance(id, 0.0));
 
             return Results.with(accountRepository.findAccountById(id), Status.CREATED);
+        });
+    }
+
+    @Path(":accountId/balance")
+    @GET
+    public Balance getBalanceByAccountId(final Long accountId) {
+        Balance balance = jdbi.inTransaction(handle -> {
+            BalanceRepository repository = handle.attach(BalanceRepository.class);
+            return repository.findBalanceByAccountId(accountId);
+        });
+
+        if (balance == null) {
+            throw new Err(Status.NOT_FOUND);
+        }
+
+        return balance;
+    }
+
+    @Path(":accountId/transactions")
+    @GET
+    public Set<Transaction> getTransactionsByAccountId(final Long accountId) {
+        return jdbi.inTransaction(handle -> {
+            TransactionRepository repository = handle.attach(TransactionRepository.class);
+            return repository.findTransactionsByAccountId(accountId);
         });
     }
 }

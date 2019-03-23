@@ -13,8 +13,8 @@ import java.util.Set;
 @RegisterRowMapper(TransactionMapper.class)
 public interface TransactionRepository {
 
-    @SqlQuery("select * from transaction where id = :id")
-    Transaction findTransactionById(@Bind("id") Long id);
+    @SqlQuery("select * from transaction where operation_uuid = :operationUuid")
+    Set<Transaction> findTransactionsByOperationUuid(@Bind("operationUuid") String operationUuid);
 
     @SqlQuery("select * from transaction where sender_id = :id or recipient_id = :id")
     Set<Transaction> findTransactionsByAccountId(@Bind("id") Long id);

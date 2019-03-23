@@ -4,7 +4,6 @@ import com.github.malikin.transferator.dao.AccountRepository;
 import com.github.malikin.transferator.dao.BalanceRepository;
 import com.github.malikin.transferator.dto.Account;
 import com.github.malikin.transferator.dto.Balance;
-import com.github.malikin.transferator.rest.BalanceController;
 import com.github.malikin.transferator.rest.AccountController;
 import com.github.malikin.transferator.rest.TransactionController;
 import org.jdbi.v3.core.Jdbi;
@@ -40,7 +39,6 @@ public class App extends Jooby {
         });
 
         use(AccountController.class);
-        use(BalanceController.class);
         use(TransactionController.class);
     }
 

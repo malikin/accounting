@@ -8,6 +8,7 @@ import com.github.malikin.transferator.dto.Balance;
 import com.github.malikin.transferator.dto.Transaction;
 import com.github.malikin.transferator.dto.TransferOperation;
 import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 import org.jdbi.v3.core.Jdbi;
 import org.jooby.Err;
 import org.jooby.Result;
@@ -22,6 +23,7 @@ import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 
+@Slf4j
 @Path("/transaction")
 public class TransactionController {
 
@@ -32,27 +34,19 @@ public class TransactionController {
         this.jdbi = jdbi;
     }
 
-    @Path("/:id")
+    @Path(":operationUuid")
     @GET
-    public Transaction getTransactionById(final Long transactionId) {
-        Transaction transaction = jdbi.inTransaction(handle -> {
+    public Set<Transaction> getTransactionByOperationUuid(final String operationUuid) {
+        Set<Transaction> transactions = jdbi.inTransaction(handle -> {
             TransactionRepository repository = handle.attach(TransactionRepository.class);
-            return repository.findTransactionById(transactionId);
+            return repository.findTransactionsByOperationUuid(operationUuid);
         });
 
-        if (transaction == null) {
+        if (transactions.isEmpty()) {
             throw new Err(Status.NOT_FOUND);
         }
 
-        return transaction;
-    }
-
-    @GET
-    public Set<Transaction> getTransactionsByAccountId(final Long accountId) {
-        return jdbi.inTransaction(handle -> {
-            TransactionRepository repository = handle.attach(TransactionRepository.class);
-            return repository.findTransactionsByAccountId(accountId);
-        });
+        return transactions;
     }
 
     @POST
@@ -69,15 +63,21 @@ public class TransactionController {
             UUID operationUuid = UUID.randomUUID();
             Instant timestamp = Instant.now();
 
+            log.info("Transaction with OperationUUID: {} began", operationUuid);
+
             Account sender = accountRepository.findAccountById(transferOperation.getSenderId());
 
             if (sender == null) {
+                log.info("Transaction with OperationUUID: {} canceled, sender {} not found",
+                        operationUuid, transferOperation.getSenderId());
                 throw new Err(Status.BAD_REQUEST, "Sender not found");
             }
 
             Account recipient = accountRepository.findAccountById(transferOperation.getRecipientId());
 
             if (recipient == null) {
+                log.info("Transaction with OperationUUID: {} canceled, recipient {} not found",
+                        operationUuid, transferOperation.getRecipientId());
                 throw new Err(Status.BAD_REQUEST, "Recipient not found");
             }
 
@@ -87,7 +87,9 @@ public class TransactionController {
             Double amount = transferOperation.getAmount();
 
             if (senderBalance.getAmount() < amount) {
-                throw new Err(Status.BAD_REQUEST, "Not enough amount on sender balance ");
+                log.info("Transaction with OperationUUID: {} canceled, insufficient amount on the sender {} account",
+                        operationUuid, transferOperation.getSenderId());
+                throw new Err(Status.BAD_REQUEST, "Insufficient amount on the sender account");
             }
 
             Transaction creditTransaction = Transaction.builder()
@@ -115,6 +117,8 @@ public class TransactionController {
 
             recipientBalance.setAmount(recipientBalance.getAmount() + amount);
             balanceRepository.updateBalance(recipientBalance);
+
+            log.info("Transaction with OperationUUID: {} committed", operationUuid);
 
             return Results.with(Status.CREATED);
         });
