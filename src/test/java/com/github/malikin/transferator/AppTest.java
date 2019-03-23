@@ -37,7 +37,6 @@ public class AppTest {
 
     @Test
     public void getNonExistAccountTest() {
-
         given()
                 .accept(ContentType.JSON)
                 .when()
@@ -112,7 +111,7 @@ public class AppTest {
     }
 
     @Test
-    public void createAccountAndIncreaseBalanceTest() {
+    public void createAccountIncreaseBalanceCheckTransactionLogTest() {
         String account = "{\"name\":\"TestAccountWithBalance\"}";
 
         given()
@@ -147,5 +146,59 @@ public class AppTest {
         balance = get(String.format("/balance?accountId=%d", accountCreated.getId())).as(Balance.class);
 
         assertEquals(100D, balance.getAmount(), 0.001);
+
+        given()
+                .accept(ContentType.JSON)
+                .when()
+                .get(String.format("/transaction?accountId=%d", accountCreated.getId()))
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .contentType(ContentType.JSON);
+    }
+
+    @Test
+    public void makeTransferWithZeroAmountTest() {
+        String transferOperation = "{\"senderId\": " + BANK_ACCOUNT_ID + ", \"recipientId\": 2, \"amount\": 0 }";
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(transferOperation)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/transaction")
+                .then()
+                .assertThat()
+                .statusCode(400);
+    }
+
+    @Test
+    public void makeTransferNonExistSenderTest() {
+        String transferOperation = "{\"senderId\": 1000, \"recipientId\": 1, \"amount\": 100 }";
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(transferOperation)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/transaction")
+                .then()
+                .assertThat()
+                .statusCode(400);
+    }
+
+    @Test
+    public void makeTransferNonExistRecipientTest() {
+        String transferOperation = "{\"senderId\": 1, \"recipientId\": 1000, \"amount\": 100 }";
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(transferOperation)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/transaction")
+                .then()
+                .assertThat()
+                .statusCode(400);
     }
 }
