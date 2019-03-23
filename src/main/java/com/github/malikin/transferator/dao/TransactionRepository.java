@@ -1,24 +1,22 @@
 package com.github.malikin.transferator.dao;
 
 import com.github.malikin.transferator.dto.Transaction;
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.helpers.MapResultAsBean;
+import com.github.malikin.transferator.mapper.TransactionMapper;
+import org.jdbi.v3.sqlobject.config.RegisterRowMapper;
+import org.jdbi.v3.sqlobject.customizer.Bind;
+import org.jdbi.v3.sqlobject.customizer.BindBean;
+import org.jdbi.v3.sqlobject.statement.SqlQuery;
+import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
 import java.util.Set;
 
+@RegisterRowMapper(TransactionMapper.class)
 public interface TransactionRepository {
 
-    @SqlQuery("select id, operation_uuid as operationUuid, sender_id as senderId, recipient_id as recipientId, timestamp, amount " +
-                    "from balance where id = :id")
-    @MapResultAsBean
+    @SqlQuery("select * from transaction where id = :id")
     Transaction findTransactionById(@Bind("id") Long id);
 
-    @SqlQuery("select id, operation_uuid as operationUuid, sender_id as senderId, recipient_id as recipientId, timestamp, amount " +
-            "from balance where sender_id = :id or recipient_id = :id")
-    @MapResultAsBean
+    @SqlQuery("select * from transaction where sender_id = :id or recipient_id = :id")
     Set<Transaction> findTransactionsByAccountId(@Bind("id") Long id);
 
     @SqlUpdate("insert into transaction (operation_uuid, sender_id, recipient_id, timestamp, amount) " +

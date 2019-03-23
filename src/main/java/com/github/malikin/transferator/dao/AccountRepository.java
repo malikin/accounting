@@ -1,23 +1,23 @@
 package com.github.malikin.transferator.dao;
 
 import com.github.malikin.transferator.dto.Account;
-import org.skife.jdbi.v2.sqlobject.Bind;
-import org.skife.jdbi.v2.sqlobject.BindBean;
-import org.skife.jdbi.v2.sqlobject.GetGeneratedKeys;
-import org.skife.jdbi.v2.sqlobject.SqlQuery;
-import org.skife.jdbi.v2.sqlobject.SqlUpdate;
-import org.skife.jdbi.v2.sqlobject.helpers.MapResultAsBean;
+import com.github.malikin.transferator.mapper.AccountMapper;
+import org.jdbi.v3.sqlobject.config.RegisterRowMapper;
+import org.jdbi.v3.sqlobject.customizer.Bind;
+import org.jdbi.v3.sqlobject.customizer.BindBean;
+import org.jdbi.v3.sqlobject.statement.GetGeneratedKeys;
+import org.jdbi.v3.sqlobject.statement.SqlQuery;
+import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
 import java.util.List;
 
+@RegisterRowMapper(AccountMapper.class)
 public interface AccountRepository {
 
     @SqlQuery("select * from account")
-    @MapResultAsBean
     List<Account> findAll();
 
     @SqlQuery("select * from account where id = :id")
-    @MapResultAsBean
     Account findAccountById(@Bind("id") Long id);
 
     @SqlUpdate("insert into account (name) values (:account.name)")

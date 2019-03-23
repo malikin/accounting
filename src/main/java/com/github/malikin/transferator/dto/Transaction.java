@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -19,5 +19,5 @@ public class Transaction {
     private Long senderId;
     private Long recipientId;
     private Double amount;
-    private ZonedDateTime timestamp;
+    private Instant timestamp;
 }
