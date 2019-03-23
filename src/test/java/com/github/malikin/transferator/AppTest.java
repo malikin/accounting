@@ -4,13 +4,17 @@ import static io.restassured.RestAssured.get;
 import static io.restassured.RestAssured.given;
 import static org.junit.Assert.assertEquals;
 
+import com.github.malikin.transferator.dto.Account;
+import com.github.malikin.transferator.dto.Balance;
 import io.restassured.http.ContentType;
 import org.jooby.test.JoobyRule;
-import org.jooby.test.MockRouter;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class AppTest {
+
+    private static final Double BANK_ACCOUNT_ID = 1D;
 
     /**
      * One app/server for all the test of this class. If you want to start/stop a new server per test,
@@ -59,12 +63,89 @@ public class AppTest {
                 .contentType(ContentType.JSON);
     }
 
-//
-//    @Test
-//    public void unitTest() throws Throwable {
-//        String result = new MockRouter(new App())
-//                .get("/");
-//
-//        assertEquals("Hello World!", result);
-//    }
+    @Test
+    public void createDoubleAccountTest() {
+        String account = "{\"name\":\"TestAccountDouble\"}";
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(account)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/account")
+                .then()
+                .assertThat()
+                .statusCode(201)
+                .contentType(ContentType.JSON);
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(account)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/account")
+                .then()
+                .assertThat()
+                .statusCode(400);
+    }
+
+    @Test
+    public void createAccountAndCheckEmptyBalanceTest() {
+        String account = "{\"name\":\"TestAccountEmptyBalance\"}";
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(account)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/account")
+                .then()
+                .assertThat()
+                .statusCode(201)
+                .contentType(ContentType.JSON);
+
+        Account accountCreated = get("/account?name=TestAccountEmptyBalance").as(Account.class);
+
+        Balance balance = get(String.format("/balance?accountId=%d", accountCreated.getId())).as(Balance.class);
+
+        assertEquals(0D, balance.getAmount(), 0.01);
+    }
+
+    @Test
+    public void createAccountAndIncreaseBalanceTest() {
+        String account = "{\"name\":\"TestAccountWithBalance\"}";
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(account)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/account")
+                .then()
+                .assertThat()
+                .statusCode(201)
+                .contentType(ContentType.JSON);
+
+        Account accountCreated = get("/account?name=TestAccountWithBalance").as(Account.class);
+
+        Balance balance = get(String.format("/balance?accountId=%d", accountCreated.getId())).as(Balance.class);
+
+        assertEquals(0D, balance.getAmount(), 0.001);
+
+        String transferOperation = "{\"senderId\": " + BANK_ACCOUNT_ID + ", \"recipientId\": " + accountCreated.getId()  + ", \"amount\": 100 }";
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(transferOperation)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/transaction")
+                .then()
+                .assertThat()
+                .statusCode(201);
+
+        balance = get(String.format("/balance?accountId=%d", accountCreated.getId())).as(Balance.class);
+
+        assertEquals(100D, balance.getAmount(), 0.001);
+    }
 }

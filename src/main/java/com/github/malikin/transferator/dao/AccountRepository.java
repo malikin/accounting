@@ -20,6 +20,9 @@ public interface AccountRepository {
     @SqlQuery("select * from account where id = :id")
     Account findAccountById(@Bind("id") Long id);
 
+    @SqlQuery("select * from account where name = :name")
+    Account findAccountByName(@Bind("name") String name);
+
     @SqlUpdate("insert into account (name) values (:account.name)")
     @GetGeneratedKeys
     Long addAccount(@BindBean("account") Account account);

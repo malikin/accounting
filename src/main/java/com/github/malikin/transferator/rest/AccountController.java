@@ -1,7 +1,9 @@
 package com.github.malikin.transferator.rest;
 
 import com.github.malikin.transferator.dao.AccountRepository;
+import com.github.malikin.transferator.dao.BalanceRepository;
 import com.github.malikin.transferator.dto.Account;
+import com.github.malikin.transferator.dto.Balance;
 import com.google.inject.Inject;
 import org.jdbi.v3.core.Jdbi;
 import org.jooby.Err;
@@ -13,7 +15,7 @@ import org.jooby.mvc.GET;
 import org.jooby.mvc.POST;
 import org.jooby.mvc.Path;
 
-import java.util.List;
+import java.util.Optional;
 
 @Path("/account")
 public class AccountController {
@@ -41,19 +43,43 @@ public class AccountController {
     }
 
     @GET
-    public List<Account> getAllAccounts() {
-        return jdbi.inTransaction(handle -> {
+    public Result getAccountByName(final Optional<String> name) {
+
+        if (!name.isPresent()) {
+            return jdbi.inTransaction(handle -> {
+                AccountRepository repository = handle.attach(AccountRepository.class);
+                return Results.with(repository.findAll());
+            });
+        }
+
+        Account account =  jdbi.inTransaction(handle -> {
             AccountRepository repository = handle.attach(AccountRepository.class);
-            return repository.findAll();
+            return repository.findAccountByName(name.get());
         });
+
+        if (account == null) {
+            throw new Err(Status.NOT_FOUND);
+        }
+
+        return Results.with(account);
     }
 
     @POST
-    public Result createAccount(@Body final Account accountDto) {
+    public Result createAccount(@Body final Account account) {
         return jdbi.inTransaction(handle -> {
-            AccountRepository repository = handle.attach(AccountRepository.class);
-            Long id = repository.addAccount(accountDto);
-            return Results.with(id, Status.CREATED);
+            AccountRepository accountRepository = handle.attach(AccountRepository.class);
+            BalanceRepository balanceRepository = handle.attach(BalanceRepository.class);
+
+            Account existedAccount = accountRepository.findAccountByName(account.getName());
+
+            if (existedAccount != null) {
+                throw new Err(Status.BAD_REQUEST, String.format("Account with name %s already exist", account.getName()));
+            }
+
+            Long id = accountRepository.addAccount(account);
+            balanceRepository.addBalance(new Balance(id, 0.0));
+
+            return Results.with(accountRepository.findAccountById(id), Status.CREATED);
         });
     }
 }

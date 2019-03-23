@@ -6,6 +6,7 @@ import com.github.malikin.transferator.dao.TransactionRepository;
 import com.github.malikin.transferator.dto.Account;
 import com.github.malikin.transferator.dto.Balance;
 import com.github.malikin.transferator.dto.Transaction;
+import com.github.malikin.transferator.dto.TransferOperation;
 import com.google.inject.Inject;
 import org.jdbi.v3.core.Jdbi;
 import org.jooby.Err;
@@ -54,45 +55,65 @@ public class TransactionController {
         });
     }
 
-    //Just stub
     @POST
-    public Result addTransaction(@Body final Transaction transactionDto) {
+    public Result makeTransfer(@Body final TransferOperation transferOperation) {
+        if (transferOperation.getAmount() <= 0) {
+            throw new Err(Status.BAD_REQUEST, "Amount should be greater 0");
+        }
+
         return jdbi.inTransaction(handle -> {
             TransactionRepository transactionRepository = handle.attach(TransactionRepository.class);
             BalanceRepository balanceRepository = handle.attach(BalanceRepository.class);
             AccountRepository accountRepository = handle.attach(AccountRepository.class);
 
-            UUID operationId = UUID.randomUUID();
+            UUID operationUuid = UUID.randomUUID();
+            Instant timestamp = Instant.now();
 
-            Account sender = accountRepository.findAccountById(transactionDto.getSenderId());
+            Account sender = accountRepository.findAccountById(transferOperation.getSenderId());
 
             if (sender == null) {
                 throw new Err(Status.BAD_REQUEST, "Sender not found");
             }
 
-            Account recipient = accountRepository.findAccountById(transactionDto.getRecipientId());
+            Account recipient = accountRepository.findAccountById(transferOperation.getRecipientId());
 
             if (recipient == null) {
                 throw new Err(Status.BAD_REQUEST, "Recipient not found");
             }
 
-            Balance senderBalance = balanceRepository.findBalanceByAccountIdWithLock(transactionDto.getSenderId());
-            Balance recipientBalance = balanceRepository.findBalanceByAccountIdWithLock(transactionDto.getRecipientId());
+            Balance senderBalance = balanceRepository.findBalanceByAccountIdWithLock(transferOperation.getSenderId());
+            Balance recipientBalance = balanceRepository.findBalanceByAccountIdWithLock(transferOperation.getRecipientId());
 
-            if (senderBalance.getAmount() < transactionDto.getAmount()) {
+            Double amount = transferOperation.getAmount();
+
+            if (senderBalance.getAmount() < amount) {
                 throw new Err(Status.BAD_REQUEST, "Not enough amount on sender balance ");
             }
 
+            Transaction creditTransaction = Transaction.builder()
+                    .amount(-amount)
+                    .operationUuid(operationUuid)
+                    .senderId(transferOperation.getRecipientId())
+                    .recipientId(transferOperation.getSenderId())
+                    .timestamp(timestamp)
+                    .build();
 
-            //add two transactions
-            transactionDto.setOperationUuid(operationId);
-            transactionDto.setTimestamp(Instant.now());
-            transactionRepository.addTransaction(transactionDto);
+            transactionRepository.addTransaction(creditTransaction);
 
-            senderBalance.setAmount(senderBalance.getAmount() - transactionDto.getAmount());
-            recipientBalance.setAmount(recipientBalance.getAmount() + transactionDto.getAmount());
-
+            senderBalance.setAmount(senderBalance.getAmount() - amount);
             balanceRepository.updateBalance(senderBalance);
+
+            Transaction debetTransaction = Transaction.builder()
+                    .amount(amount)
+                    .operationUuid(operationUuid)
+                    .senderId(transferOperation.getSenderId())
+                    .recipientId(transferOperation.getRecipientId())
+                    .timestamp(timestamp)
+                    .build();
+
+            transactionRepository.addTransaction(debetTransaction);
+
+            recipientBalance.setAmount(recipientBalance.getAmount() + amount);
             balanceRepository.updateBalance(recipientBalance);
 
             return Results.with(Status.CREATED);
