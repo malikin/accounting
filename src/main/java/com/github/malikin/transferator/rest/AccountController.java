@@ -1,13 +1,9 @@
 package com.github.malikin.transferator.rest;
 
-import com.github.malikin.transferator.dao.AccountRepository;
-import com.github.malikin.transferator.dao.BalanceRepository;
-import com.github.malikin.transferator.dao.TransactionRepository;
 import com.github.malikin.transferator.dto.Account;
 import com.github.malikin.transferator.dto.Balance;
-import com.github.malikin.transferator.dto.Transaction;
+import com.github.malikin.transferator.service.AccountService;
 import com.google.inject.Inject;
-import org.jdbi.v3.core.Jdbi;
 import org.jooby.Err;
 import org.jooby.Result;
 import org.jooby.Results;
@@ -18,47 +14,36 @@ import org.jooby.mvc.POST;
 import org.jooby.mvc.Path;
 
 import java.util.Optional;
-import java.util.Set;
 
 @Path("/account")
 public class AccountController {
 
-    private final Jdbi jdbi;
+    private final AccountService accountService;
 
     @Inject
-    public AccountController(final Jdbi jdbi) {
-        this.jdbi = jdbi;
+    public AccountController(final AccountService accountService) {
+        this.accountService = accountService;
     }
 
     @Path("/:id")
     @GET
-    public Account getAccountById(final Long id) {
-        Account account =  jdbi.withHandle(handle -> {
-            AccountRepository repository = handle.attach(AccountRepository.class);
-            return repository.findAccountById(id);
-        });
+    public Result findAccountById(final Long id) {
+        Account account = accountService.findAccountById(id);
 
         if (account == null) {
             throw new Err(Status.NOT_FOUND);
         }
 
-        return account;
+        return Results.with(account);
     }
 
     @GET
-    public Result getAccountByName(final Optional<String> name) {
-
+    public Result findAccountByName(final Optional<String> name) {
         if (!name.isPresent()) {
-            return jdbi.withHandle(handle -> {
-                AccountRepository repository = handle.attach(AccountRepository.class);
-                return Results.with(repository.findAll());
-            });
+            return Results.with(accountService.findAllAccounts());
         }
 
-        Account account =  jdbi.withHandle(handle -> {
-            AccountRepository repository = handle.attach(AccountRepository.class);
-            return repository.findAccountByName(name.get());
-        });
+        Account account = accountService.findAccountByName(name.get());
 
         if (account == null) {
             throw new Err(Status.NOT_FOUND);
@@ -69,44 +54,23 @@ public class AccountController {
 
     @POST
     public Result createAccount(@Body final Account account) {
-        return jdbi.inTransaction(handle -> {
-            AccountRepository accountRepository = handle.attach(AccountRepository.class);
-            BalanceRepository balanceRepository = handle.attach(BalanceRepository.class);
-
-            Account existedAccount = accountRepository.findAccountByName(account.getName());
-
-            if (existedAccount != null) {
-                throw new Err(Status.BAD_REQUEST, String.format("Account with name %s already exist", account.getName()));
-            }
-
-            Long id = accountRepository.addAccount(account);
-            balanceRepository.addBalance(new Balance(id, 0.0));
-
-            return Results.with(accountRepository.findAccountById(id), Status.CREATED);
-        });
+        return Results.with(accountService.createAccount(account), Status.CREATED);
     }
 
     @Path(":accountId/balance")
     @GET
-    public Balance getBalanceByAccountId(final Long accountId) {
-        Balance balance = jdbi.withHandle(handle -> {
-            BalanceRepository repository = handle.attach(BalanceRepository.class);
-            return repository.findBalanceByAccountId(accountId);
-        });
-
+    public Result getBalanceByAccountId(final Long accountId) {
+        Balance balance = accountService.getBalanceByAccountId(accountId);
         if (balance == null) {
             throw new Err(Status.NOT_FOUND);
         }
 
-        return balance;
+        return Results.with(balance);
     }
 
     @Path(":accountId/transactions")
     @GET
-    public Set<Transaction> getTransactionsByAccountId(final Long accountId) {
-        return jdbi.withHandle(handle -> {
-            TransactionRepository repository = handle.attach(TransactionRepository.class);
-            return repository.findTransactionsByAccountId(accountId);
-        });
+    public Result getTransactionsByAccountId(final Long accountId) {
+        return Results.with(accountService.findTransactionsByAccountId(accountId));
     }
 }

@@ -215,6 +215,40 @@ public class AppTest {
     }
 
     @Test
+    public void createAccountMakeTransferFromEmptyBalanceTest() {
+        String account = "{\"name\":\"TestAccountWithEmptyBalance\"}";
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(account)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/account")
+                .then()
+                .assertThat()
+                .statusCode(201)
+                .contentType(ContentType.JSON);
+
+        Account accountCreated = get("/account?name=TestAccountWithEmptyBalance").as(Account.class);
+
+        Balance balance = get(String.format("/account/%d/balance", accountCreated.getId())).as(Balance.class);
+
+        assertEquals("Balance is empty", 0D, balance.getAmount(), 0.001);
+
+        String transferOperation = "{\"recipientId\": " + BANK_ACCOUNT_ID + ", \"senderId\": " + accountCreated.getId()  + ", \"amount\": 100 }";
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(transferOperation)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/transaction")
+                .then()
+                .assertThat()
+                .statusCode(400);
+    }
+
+    @Test
     public void makeTransferWithZeroAmountTest() {
         String transferOperation = "{\"senderId\": " + BANK_ACCOUNT_ID + ", \"recipientId\": 2, \"amount\": 0 }";
 

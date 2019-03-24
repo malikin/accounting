@@ -9,13 +9,13 @@ import org.jdbi.v3.sqlobject.statement.GetGeneratedKeys;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
-import java.util.List;
+import java.util.Set;
 
 @RegisterRowMapper(AccountMapper.class)
 public interface AccountRepository {
 
     @SqlQuery("select * from account")
-    List<Account> findAll();
+    Set<Account> findAll();
 
     @SqlQuery("select * from account where id = :id")
     Account findAccountById(@Bind("id") Long id);
