@@ -28,7 +28,7 @@ public class TransactionController {
     @Path(":operationUuid")
     @GET
     public Result getTransactionByOperationUuid(final String operationUuid) {
-        Set<Transaction> transactions = transactionService.getTransactionByOperationUuid(operationUuid);
+        final Set<Transaction> transactions = transactionService.getTransactionByOperationUuid(operationUuid);
 
         if (transactions.isEmpty()) {
             throw new Err(Status.NOT_FOUND);

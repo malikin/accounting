@@ -7,6 +7,7 @@ import static org.junit.Assert.assertEquals;
 import com.github.malikin.transferator.dto.Account;
 import com.github.malikin.transferator.dto.Balance;
 import com.github.malikin.transferator.dto.Transaction;
+import com.google.inject.Inject;
 import io.restassured.http.ContentType;
 import org.jooby.test.JoobyRule;
 import org.junit.ClassRule;
@@ -71,11 +72,11 @@ public class AppTest {
 
     @Test
     public void createAccountTest() {
-        String account = "{\"name\":\"TestAccount\"}";
+        final String accountPostBody = "{\"name\":\"TestAccount\"}";
 
         given()
                 .contentType(ContentType.JSON)
-                .body(account)
+                .body(accountPostBody)
                 .accept(ContentType.JSON)
                 .when()
                 .post("/account")
@@ -87,11 +88,11 @@ public class AppTest {
 
     @Test
     public void createDoubleAccountTest() {
-        String account = "{\"name\":\"TestAccountDouble\"}";
+        final String accountPostBody = "{\"name\":\"TestAccountDouble\"}";
 
         given()
                 .contentType(ContentType.JSON)
-                .body(account)
+                .body(accountPostBody)
                 .accept(ContentType.JSON)
                 .when()
                 .post("/account")
@@ -102,7 +103,7 @@ public class AppTest {
 
         given()
                 .contentType(ContentType.JSON)
-                .body(account)
+                .body(accountPostBody)
                 .accept(ContentType.JSON)
                 .when()
                 .post("/account")
@@ -113,11 +114,11 @@ public class AppTest {
 
     @Test
     public void createAccountAndFindByIdTest() {
-        String account = "{\"name\":\"TestAccountFindById\"}";
+        final String accountPostBody = "{\"name\":\"TestAccountFindById\"}";
 
         given()
                 .contentType(ContentType.JSON)
-                .body(account)
+                .body(accountPostBody)
                 .accept(ContentType.JSON)
                 .when()
                 .post("/account")
@@ -126,7 +127,7 @@ public class AppTest {
                 .statusCode(201)
                 .contentType(ContentType.JSON);
 
-        Account accountCreated = get("/account?name=TestAccountFindById").as(Account.class);
+        final Account accountCreated = get("/account?name=TestAccountFindById").as(Account.class);
 
         given()
                 .accept(ContentType.JSON)
@@ -139,11 +140,11 @@ public class AppTest {
 
     @Test
     public void createAccountAndCheckEmptyBalanceTest() {
-        String account = "{\"name\":\"TestAccountEmptyBalance\"}";
+        final String accountPostBody = "{\"name\":\"TestAccountEmptyBalance\"}";
 
         given()
                 .contentType(ContentType.JSON)
-                .body(account)
+                .body(accountPostBody)
                 .accept(ContentType.JSON)
                 .when()
                 .post("/account")
@@ -152,20 +153,20 @@ public class AppTest {
                 .statusCode(201)
                 .contentType(ContentType.JSON);
 
-        Account accountCreated = get("/account?name=TestAccountEmptyBalance").as(Account.class);
+        final Account accountCreated = get("/account?name=TestAccountEmptyBalance").as(Account.class);
 
-        Balance balance = get(String.format("/account/%d/balance", accountCreated.getId())).as(Balance.class);
+        final Balance balance = get(String.format("/account/%d/balance", accountCreated.getId())).as(Balance.class);
 
         assertEquals(0D, balance.getAmount(), 0.01);
     }
 
     @Test
     public void createAccountIncreaseBalanceCheckTransactionLogTest() {
-        String account = "{\"name\":\"TestAccountWithBalance\"}";
+        final String accountPostBody = "{\"name\":\"TestAccountWithBalance\"}";
 
         given()
                 .contentType(ContentType.JSON)
-                .body(account)
+                .body(accountPostBody)
                 .accept(ContentType.JSON)
                 .when()
                 .post("/account")
@@ -174,17 +175,17 @@ public class AppTest {
                 .statusCode(201)
                 .contentType(ContentType.JSON);
 
-        Account accountCreated = get("/account?name=TestAccountWithBalance").as(Account.class);
+        final Account accountCreated = get("/account?name=TestAccountWithBalance").as(Account.class);
 
-        Balance balance = get(String.format("/account/%d/balance", accountCreated.getId())).as(Balance.class);
+        final Balance balance = get(String.format("/account/%d/balance", accountCreated.getId())).as(Balance.class);
 
         assertEquals("Balance is empty", 0D, balance.getAmount(), 0.001);
 
-        String transferOperation = "{\"senderId\": " + BANK_ACCOUNT_ID + ", \"recipientId\": " + accountCreated.getId()  + ", \"amount\": 100 }";
+        final String transferOperationFromBank = "{\"senderId\": " + BANK_ACCOUNT_ID + ", \"recipientId\": " + accountCreated.getId()  + ", \"amount\": 100 }";
 
         given()
                 .contentType(ContentType.JSON)
-                .body(transferOperation)
+                .body(transferOperationFromBank)
                 .accept(ContentType.JSON)
                 .when()
                 .post("/transaction")
@@ -192,9 +193,9 @@ public class AppTest {
                 .assertThat()
                 .statusCode(201);
 
-        balance = get(String.format("/account/%d/balance", accountCreated.getId())).as(Balance.class);
+        final Balance balanceAfterUpdate = get(String.format("/account/%d/balance", accountCreated.getId())).as(Balance.class);
 
-        assertEquals("Bank presented 100 coins", 100D, balance.getAmount(), 0.001);
+        assertEquals("Bank presented 100 coins", 100D, balanceAfterUpdate.getAmount(), 0.001);
 
         given()
                 .accept(ContentType.JSON)
@@ -205,22 +206,22 @@ public class AppTest {
                 .statusCode(200)
                 .contentType(ContentType.JSON);
 
-        List<Transaction> transactions = Arrays.asList(get(String.format("/account/%d/transactions", accountCreated.getId())).as(Transaction[].class));
+        final List<Transaction> transactions = Arrays.asList(get(String.format("/account/%d/transactions", accountCreated.getId())).as(Transaction[].class));
 
         assertEquals("Should be two records about one operation", 2, transactions.size());
 
-        List<Transaction> transactionsByUuid = Arrays.asList(get(String.format("/transaction/%s", transactions.get(0).getOperationUuid().toString())).as(Transaction[].class));
+        final List<Transaction> transactionsByUuid = Arrays.asList(get(String.format("/transaction/%s", transactions.get(0).getOperationUuid().toString())).as(Transaction[].class));
 
         assertEquals("Should be two records about one operation", 2, transactionsByUuid.size());
     }
 
     @Test
-    public void createAccountMakeTransferFromEmptyBalanceTest() {
-        String account = "{\"name\":\"TestAccountWithEmptyBalance\"}";
+    public void createTwoAccountsAndMakeTransfersBetweenThemTest() {
+        final String senderAccountPostBody = "{\"name\":\"TestsenderAccount\"}";
 
         given()
                 .contentType(ContentType.JSON)
-                .body(account)
+                .body(senderAccountPostBody)
                 .accept(ContentType.JSON)
                 .when()
                 .post("/account")
@@ -229,17 +230,128 @@ public class AppTest {
                 .statusCode(201)
                 .contentType(ContentType.JSON);
 
-        Account accountCreated = get("/account?name=TestAccountWithEmptyBalance").as(Account.class);
+        final Account senderAccount = get("/account?name=TestsenderAccount").as(Account.class);
 
-        Balance balance = get(String.format("/account/%d/balance", accountCreated.getId())).as(Balance.class);
+        final Balance senderBalance = get(String.format("/account/%d/balance", senderAccount.getId())).as(Balance.class);
 
-        assertEquals("Balance is empty", 0D, balance.getAmount(), 0.001);
+        assertEquals("Balance is empty", 0D, senderBalance.getAmount(), 0.001);
 
-        String transferOperation = "{\"recipientId\": " + BANK_ACCOUNT_ID + ", \"senderId\": " + accountCreated.getId()  + ", \"amount\": 100 }";
+        final String transferOperationFromBankToSender = "{\"senderId\": " + BANK_ACCOUNT_ID + ", \"recipientId\": " + senderAccount.getId()  + ", \"amount\": 100 }";
 
         given()
                 .contentType(ContentType.JSON)
-                .body(transferOperation)
+                .body(transferOperationFromBankToSender)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/transaction")
+                .then()
+                .assertThat()
+                .statusCode(201);
+
+        final Balance senderBalanceAfterBankPresent = get(String.format("/account/%d/balance", senderAccount.getId())).as(Balance.class);
+
+        assertEquals("Bank presented 100 coins to sender", 100D, senderBalanceAfterBankPresent.getAmount(), 0.001);
+
+        final String recipientAccountPostBody = "{\"name\":\"TestrecipientAccount\"}";
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(recipientAccountPostBody)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/account")
+                .then()
+                .assertThat()
+                .statusCode(201)
+                .contentType(ContentType.JSON);
+
+        final Account recipientAccount = get("/account?name=TestrecipientAccount").as(Account.class);
+
+        final Balance recipientBalance = get(String.format("/account/%d/balance", recipientAccount.getId())).as(Balance.class);
+
+        assertEquals("Balance is empty", 0D, recipientBalance.getAmount(), 0.001);
+
+        String transferOperationFromBankToRecipient = "{\"senderId\": " + BANK_ACCOUNT_ID + ", \"recipientId\": " + recipientAccount.getId()  + ", \"amount\": 100 }";
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(transferOperationFromBankToRecipient)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/transaction")
+                .then()
+                .assertThat()
+                .statusCode(201);
+
+        final Balance recipientBalanceAfterBankPresent = get(String.format("/account/%d/balance", senderAccount.getId())).as(Balance.class);
+
+        assertEquals("Bank presented 100 coins to sender", 100D, recipientBalanceAfterBankPresent.getAmount(), 0.001);
+
+        String transferOperationFromSenderToRecipient = "{\"senderId\": " + senderAccount.getId() + ", \"recipientId\": " + recipientAccount.getId()  + ", \"amount\": 50 }";
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(transferOperationFromSenderToRecipient)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/transaction")
+                .then()
+                .assertThat()
+                .statusCode(201);
+
+        final Balance senderBalanceAfterTransfer = get(String.format("/account/%d/balance", senderAccount.getId())).as(Balance.class);
+        final Balance recipientBalanceAfterTransfer = get(String.format("/account/%d/balance", recipientAccount.getId())).as(Balance.class);
+
+        assertEquals("Sender balance after transfer", 50, senderBalanceAfterTransfer.getAmount(), 0.001);
+        assertEquals("Recipient balance after transfer", 150, recipientBalanceAfterTransfer.getAmount(), 0.001);
+
+        final List<Transaction> senderTransactions = Arrays.asList(get(String.format("/account/%d/transactions", senderAccount.getId())).as(Transaction[].class));
+
+        assertEquals("Should be four records about two operation", 4, senderTransactions.size());
+
+        final Double senderBalanceFromTransactions = senderTransactions.stream()
+                .filter(e -> e.getRecipientId().equals(senderAccount.getId()))
+                .mapToDouble(Transaction::getAmount).sum();
+
+        assertEquals("Balance and sum from transactions should be equal", senderBalanceAfterTransfer.getAmount(), senderBalanceFromTransactions);
+
+        final List<Transaction> recipientTransactions = Arrays.asList(get(String.format("/account/%d/transactions", recipientAccount.getId())).as(Transaction[].class));
+
+        assertEquals("Should be two records about one operation", 4, recipientTransactions.size());
+
+        final Double recipientBalanceFromTransactions = recipientTransactions.stream()
+                .filter(e -> e.getRecipientId().equals(recipientAccount.getId()))
+                .mapToDouble(Transaction::getAmount).sum();
+
+        assertEquals("Balance and sum from transactions should be equal", recipientBalanceAfterTransfer.getAmount(), recipientBalanceFromTransactions);
+    }
+
+    @Test
+    public void createAccountMakeTransferFromEmptyBalanceTest() {
+        final String accountPostBody = "{\"name\":\"TestAccountWithEmptyBalance\"}";
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(accountPostBody)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/account")
+                .then()
+                .assertThat()
+                .statusCode(201)
+                .contentType(ContentType.JSON);
+
+        final Account accountCreated = get("/account?name=TestAccountWithEmptyBalance").as(Account.class);
+
+        final Balance balance = get(String.format("/account/%d/balance", accountCreated.getId())).as(Balance.class);
+
+        assertEquals("Balance is empty", 0D, balance.getAmount(), 0.001);
+
+        final String transferOperationPostBody = "{\"recipientId\": " + BANK_ACCOUNT_ID + ", \"senderId\": " + accountCreated.getId()  + ", \"amount\": 100 }";
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(transferOperationPostBody)
                 .accept(ContentType.JSON)
                 .when()
                 .post("/transaction")
@@ -250,11 +362,11 @@ public class AppTest {
 
     @Test
     public void makeTransferWithZeroAmountTest() {
-        String transferOperation = "{\"senderId\": " + BANK_ACCOUNT_ID + ", \"recipientId\": 2, \"amount\": 0 }";
+        final String transferOperationPostBody = "{\"senderId\": " + BANK_ACCOUNT_ID + ", \"recipientId\": 2, \"amount\": 0 }";
 
         given()
                 .contentType(ContentType.JSON)
-                .body(transferOperation)
+                .body(transferOperationPostBody)
                 .accept(ContentType.JSON)
                 .when()
                 .post("/transaction")
@@ -265,11 +377,11 @@ public class AppTest {
 
     @Test
     public void makeTransferNonExistSenderTest() {
-        String transferOperation = "{\"senderId\": 1000, \"recipientId\": 1, \"amount\": 100 }";
+        final String transferOperationPostBody = "{\"senderId\": 1000, \"recipientId\": 1, \"amount\": 100 }";
 
         given()
                 .contentType(ContentType.JSON)
-                .body(transferOperation)
+                .body(transferOperationPostBody)
                 .accept(ContentType.JSON)
                 .when()
                 .post("/transaction")
@@ -280,11 +392,11 @@ public class AppTest {
 
     @Test
     public void makeTransferNonExistRecipientTest() {
-        String transferOperation = "{\"senderId\": 1, \"recipientId\": 1000, \"amount\": 100 }";
+        final String transferOperationPostBody = "{\"senderId\": 1, \"recipientId\": 1000, \"amount\": 100 }";
 
         given()
                 .contentType(ContentType.JSON)
-                .body(transferOperation)
+                .body(transferOperationPostBody)
                 .accept(ContentType.JSON)
                 .when()
                 .post("/transaction")

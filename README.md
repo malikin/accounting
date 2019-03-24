@@ -6,6 +6,10 @@
 Test application based on jooby framework.
 REST API for money transfers between accounts.
 
+Database schema located in application.conf (of course I know about flyway, liquibase etc :)
+
+Main test scenario can be founded in AppTest :: createTwoAccountsAndMakeTransfersBetweenThemTest
+
 #### How to start application (will start on http://localhost:8080/):
 
 ```

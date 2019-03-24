@@ -28,7 +28,7 @@ public class AccountController {
     @Path("/:id")
     @GET
     public Result findAccountById(final Long id) {
-        Account account = accountService.findAccountById(id);
+        final Account account = accountService.findAccountById(id);
 
         if (account == null) {
             throw new Err(Status.NOT_FOUND);
@@ -43,7 +43,7 @@ public class AccountController {
             return Results.with(accountService.findAllAccounts());
         }
 
-        Account account = accountService.findAccountByName(name.get());
+        final Account account = accountService.findAccountByName(name.get());
 
         if (account == null) {
             throw new Err(Status.NOT_FOUND);
@@ -60,7 +60,7 @@ public class AccountController {
     @Path(":accountId/balance")
     @GET
     public Result getBalanceByAccountId(final Long accountId) {
-        Balance balance = accountService.getBalanceByAccountId(accountId);
+        final Balance balance = accountService.getBalanceByAccountId(accountId);
         if (balance == null) {
             throw new Err(Status.NOT_FOUND);
         }

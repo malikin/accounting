@@ -18,50 +18,50 @@ public class AccountService {
     private final Jdbi jdbi;
 
     @Inject
-    public AccountService(Jdbi jdbi) {
+    public AccountService(final Jdbi jdbi) {
         this.jdbi = jdbi;
     }
 
     public Account findAccountById(final Long id) {
         return jdbi.withHandle(handle -> {
-            AccountRepository repository = handle.attach(AccountRepository.class);
+            final AccountRepository repository = handle.attach(AccountRepository.class);
             return repository.findAccountById(id);
         });
     }
 
     public Set<Account> findAllAccounts() {
         return jdbi.withHandle(handle -> {
-            AccountRepository repository = handle.attach(AccountRepository.class);
+            final AccountRepository repository = handle.attach(AccountRepository.class);
             return repository.findAll();
         });
     }
 
     public Account findAccountByName(final String name) {
         return jdbi.withHandle(handle -> {
-            AccountRepository repository = handle.attach(AccountRepository.class);
+            final AccountRepository repository = handle.attach(AccountRepository.class);
             return repository.findAccountByName(name);
         });
     }
 
     public Set<Transaction> findTransactionsByAccountId(final Long accountId) {
         return jdbi.withHandle(handle -> {
-            TransactionRepository repository = handle.attach(TransactionRepository.class);
+            final TransactionRepository repository = handle.attach(TransactionRepository.class);
             return repository.findTransactionsByAccountId(accountId);
         });
     }
 
     public Account createAccount(final Account account) {
         return jdbi.inTransaction(handle -> {
-            AccountRepository accountRepository = handle.attach(AccountRepository.class);
-            BalanceRepository balanceRepository = handle.attach(BalanceRepository.class);
+            final AccountRepository accountRepository = handle.attach(AccountRepository.class);
+            final BalanceRepository balanceRepository = handle.attach(BalanceRepository.class);
 
-            Account existedAccount = accountRepository.findAccountByName(account.getName());
+            final Account existedAccount = accountRepository.findAccountByName(account.getName());
 
             if (existedAccount != null) {
                 throw new Err(Status.BAD_REQUEST, String.format("Account with name %s already exist", account.getName()));
             }
 
-            Long id = accountRepository.addAccount(account);
+            final Long id = accountRepository.addAccount(account);
             balanceRepository.addBalance(new Balance(id, 0.0));
 
             return accountRepository.findAccountById(id);
@@ -70,7 +70,7 @@ public class AccountService {
 
     public Balance getBalanceByAccountId(final Long accountId) {
         return jdbi.withHandle(handle -> {
-            BalanceRepository repository = handle.attach(BalanceRepository.class);
+            final BalanceRepository repository = handle.attach(BalanceRepository.class);
             return repository.findBalanceByAccountId(accountId);
         });
     }

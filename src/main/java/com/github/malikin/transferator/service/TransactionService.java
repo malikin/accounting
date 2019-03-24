@@ -23,29 +23,29 @@ public class TransactionService {
     private final Jdbi jdbi;
 
     @Inject
-    public TransactionService(Jdbi jdbi) {
+    public TransactionService(final Jdbi jdbi) {
         this.jdbi = jdbi;
     }
 
     public Set<Transaction> getTransactionByOperationUuid(final String operationUuid) {
         return jdbi.withHandle(handle -> {
-            TransactionRepository repository = handle.attach(TransactionRepository.class);
+            final TransactionRepository repository = handle.attach(TransactionRepository.class);
             return repository.findTransactionsByOperationUuid(operationUuid);
         });
     }
 
     public void makeTransfer(final TransferOperation transferOperation) {
         jdbi.useTransaction(handle -> {
-            TransactionRepository transactionRepository = handle.attach(TransactionRepository.class);
-            BalanceRepository balanceRepository = handle.attach(BalanceRepository.class);
-            AccountRepository accountRepository = handle.attach(AccountRepository.class);
+            final TransactionRepository transactionRepository = handle.attach(TransactionRepository.class);
+            final BalanceRepository balanceRepository = handle.attach(BalanceRepository.class);
+            final AccountRepository accountRepository = handle.attach(AccountRepository.class);
 
-            UUID operationUuid = UUID.randomUUID();
-            Instant timestamp = Instant.now();
+            final UUID operationUuid = UUID.randomUUID();
+            final Instant timestamp = Instant.now();
 
             log.info("Transaction with OperationUUID: {} began", operationUuid);
 
-            Account sender = accountRepository.findAccountById(transferOperation.getSenderId());
+            final Account sender = accountRepository.findAccountById(transferOperation.getSenderId());
 
             if (sender == null) {
                 log.info("Transaction with OperationUUID: {} canceled, sender {} not found",
@@ -53,7 +53,7 @@ public class TransactionService {
                 throw new Err(Status.BAD_REQUEST, "Sender not found");
             }
 
-            Account recipient = accountRepository.findAccountById(transferOperation.getRecipientId());
+            final Account recipient = accountRepository.findAccountById(transferOperation.getRecipientId());
 
             if (recipient == null) {
                 log.info("Transaction with OperationUUID: {} canceled, recipient {} not found",
@@ -61,10 +61,9 @@ public class TransactionService {
                 throw new Err(Status.BAD_REQUEST, "Recipient not found");
             }
 
-            Balance senderBalance = balanceRepository.findBalanceByAccountIdWithLock(transferOperation.getSenderId());
-            Balance recipientBalance = balanceRepository.findBalanceByAccountIdWithLock(transferOperation.getRecipientId());
+            final Balance senderBalance = balanceRepository.findBalanceByAccountIdWithLock(transferOperation.getSenderId());
 
-            Double amount = transferOperation.getAmount();
+            final Double amount = transferOperation.getAmount();
 
             if (senderBalance.getAmount() < amount) {
                 log.info("Transaction with OperationUUID: {} canceled, insufficient amount on the sender {} account",
@@ -72,7 +71,7 @@ public class TransactionService {
                 throw new Err(Status.BAD_REQUEST, "Insufficient amount on the sender account");
             }
 
-            Transaction creditTransaction = Transaction.builder()
+            final Transaction creditTransaction = Transaction.builder()
                     .amount(-amount)
                     .operationUuid(operationUuid)
                     .senderId(transferOperation.getRecipientId())
@@ -85,7 +84,7 @@ public class TransactionService {
             senderBalance.setAmount(senderBalance.getAmount() - amount);
             balanceRepository.updateBalance(senderBalance);
 
-            Transaction debetTransaction = Transaction.builder()
+            final Transaction debetTransaction = Transaction.builder()
                     .amount(amount)
                     .operationUuid(operationUuid)
                     .senderId(transferOperation.getSenderId())
@@ -94,6 +93,8 @@ public class TransactionService {
                     .build();
 
             transactionRepository.addTransaction(debetTransaction);
+
+            final Balance recipientBalance = balanceRepository.findBalanceByAccountIdWithLock(transferOperation.getRecipientId());
 
             recipientBalance.setAmount(recipientBalance.getAmount() + amount);
             balanceRepository.updateBalance(recipientBalance);
