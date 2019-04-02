@@ -40,10 +40,6 @@ public class TransactionController {
 
     @POST
     public Result makeTransfer(@Body final TransferOperation transferOperation) {
-        if (transferOperation.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new Err(Status.BAD_REQUEST, "Amount should be greater 0");
-        }
-
         transactionService.makeTransfer(transferOperation);
 
         return Results.with(Status.CREATED);

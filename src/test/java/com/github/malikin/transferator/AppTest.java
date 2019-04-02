@@ -309,21 +309,23 @@ public class AppTest {
 
         assertEquals("Should be four records about two operation", 4, senderTransactions.size());
 
-//        final Double senderBalanceFromTransactions = senderTransactions.stream()
-//                .filter(e -> e.getRecipientId().equals(senderAccount.getId()))
-//                .mapToDouble(Transaction::getAmount).sum();
-//
-//        assertEquals("Balance and sum from transactions should be equal", senderBalanceAfterTransfer.getAmount(), senderBalanceFromTransactions);
-//
-//        final List<Transaction> recipientTransactions = Arrays.asList(get(String.format("/account/%d/transactions", recipientAccount.getId())).as(Transaction[].class));
-//
-//        assertEquals("Should be two records about one operation", 4, recipientTransactions.size());
-//
-//        final Double recipientBalanceFromTransactions = recipientTransactions.stream()
-//                .filter(e -> e.getRecipientId().equals(recipientAccount.getId()))
-//                .mapToDouble(Transaction::getAmount).sum();
-//
-//        assertEquals("Balance and sum from transactions should be equal", recipientBalanceAfterTransfer.getAmount(), recipientBalanceFromTransactions);
+        final BigDecimal senderBalanceFromTransactions = senderTransactions.stream()
+                .filter(e -> e.getRecipientId().equals(senderAccount.getId()))
+                .map(Transaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        assertEquals("Balance and sum from transactions should be equal", 0, senderBalanceAfterTransfer.getAmount().compareTo(senderBalanceFromTransactions));
+
+        final List<Transaction> recipientTransactions = Arrays.asList(get(String.format("/account/%d/transactions", recipientAccount.getId())).as(Transaction[].class));
+
+        assertEquals("Should be two records about one operation", 4, recipientTransactions.size());
+
+        final BigDecimal recipientBalanceFromTransactions = recipientTransactions.stream()
+                .filter(e -> e.getRecipientId().equals(recipientAccount.getId()))
+                .map(Transaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        assertEquals("Balance and sum from transactions should be equal", 0, recipientBalanceAfterTransfer.getAmount().compareTo(recipientBalanceFromTransactions));
     }
 
     @Test

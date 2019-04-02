@@ -36,6 +36,10 @@ public class TransactionService {
     }
 
     public void makeTransfer(final TransferOperation transferOperation) {
+        if (transferOperation.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new Err(Status.BAD_REQUEST, "Amount should be greater 0");
+        }
+
         jdbi.useTransaction(handle -> {
             final TransactionRepository transactionRepository = handle.attach(TransactionRepository.class);
             final BalanceRepository balanceRepository = handle.attach(BalanceRepository.class);
