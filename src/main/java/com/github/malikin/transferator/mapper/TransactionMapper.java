@@ -17,7 +17,7 @@ public class TransactionMapper implements RowMapper<Transaction> {
                 UUID.fromString(rs.getString("operation_uuid")),
                 rs.getLong("sender_id"),
                 rs.getLong("recipient_id"),
-                rs.getDouble("amount"),
+                rs.getBigDecimal("amount"),
                 rs.getTimestamp("timestamp").toInstant()
         );
     }

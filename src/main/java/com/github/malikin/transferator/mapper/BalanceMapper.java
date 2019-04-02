@@ -11,6 +11,6 @@ public class BalanceMapper implements RowMapper<Balance> {
 
     @Override
     public Balance map(ResultSet rs, StatementContext ctx) throws SQLException {
-        return new Balance(rs.getLong("account_id"), rs.getDouble("amount"));
+        return new Balance(rs.getLong("account_id"), rs.getBigDecimal("amount"));
     }
 }

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -16,6 +17,6 @@ public class Transaction {
     private UUID operationUuid;
     private Long senderId;
     private Long recipientId;
-    private Double amount;
+    private BigDecimal amount;
     private Instant timestamp;
 }

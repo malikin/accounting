@@ -13,6 +13,8 @@ import org.jooby.jdbc.Jdbc;
 import org.jooby.jdbi.Jdbi3;
 import org.jooby.json.Jackson;
 
+import java.math.BigDecimal;
+
 public class App extends Jooby {
 
     {
@@ -34,7 +36,7 @@ public class App extends Jooby {
                 accountRepository.addAccount(new Account(1L, "Bank"));
 
                 BalanceRepository balanceRepository = h.attach(BalanceRepository.class);
-                balanceRepository.addBalance(new Balance(1L, 1_000_000D));
+                balanceRepository.addBalance(new Balance(1L, BigDecimal.valueOf(1_000_000)));
             });
         });
 

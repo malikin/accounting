@@ -11,6 +11,7 @@ import org.jdbi.v3.core.Jdbi;
 import org.jooby.Err;
 import org.jooby.Status;
 
+import java.math.BigDecimal;
 import java.util.Set;
 
 public class AccountService {
@@ -62,7 +63,7 @@ public class AccountService {
             }
 
             final Long id = accountRepository.addAccount(account);
-            balanceRepository.addBalance(new Balance(id, 0.0));
+            balanceRepository.addBalance(new Balance(id, BigDecimal.valueOf(0.0)));
 
             return accountRepository.findAccountById(id);
         });

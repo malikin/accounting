@@ -13,6 +13,7 @@ import org.jooby.mvc.GET;
 import org.jooby.mvc.POST;
 import org.jooby.mvc.Path;
 
+import java.math.BigDecimal;
 import java.util.Set;
 
 @Path("/transaction")
@@ -39,7 +40,7 @@ public class TransactionController {
 
     @POST
     public Result makeTransfer(@Body final TransferOperation transferOperation) {
-        if (transferOperation.getAmount() <= 0) {
+        if (transferOperation.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new Err(Status.BAD_REQUEST, "Amount should be greater 0");
         }
 

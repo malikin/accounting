@@ -13,6 +13,7 @@ import org.jdbi.v3.core.Jdbi;
 import org.jooby.Err;
 import org.jooby.Status;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
@@ -63,16 +64,16 @@ public class TransactionService {
 
             final Balance senderBalance = balanceRepository.findBalanceByAccountIdWithLock(transferOperation.getSenderId());
 
-            final Double amount = transferOperation.getAmount();
+            final BigDecimal amount = transferOperation.getAmount();
 
-            if (senderBalance.getAmount() < amount) {
+            if (senderBalance.getAmount().compareTo(amount) == -1) {
                 log.info("Transaction with OperationUUID: {} canceled, insufficient amount on the sender {} account",
                         operationUuid, transferOperation.getSenderId());
                 throw new Err(Status.BAD_REQUEST, "Insufficient amount on the sender account");
             }
 
             final Transaction creditTransaction = Transaction.builder()
-                    .amount(-amount)
+                    .amount(amount.negate())
                     .operationUuid(operationUuid)
                     .senderId(transferOperation.getRecipientId())
                     .recipientId(transferOperation.getSenderId())
@@ -81,7 +82,7 @@ public class TransactionService {
 
             transactionRepository.addTransaction(creditTransaction);
 
-            senderBalance.setAmount(senderBalance.getAmount() - amount);
+            senderBalance.setAmount(senderBalance.getAmount().subtract(amount));
             balanceRepository.updateBalance(senderBalance);
 
             final Transaction debetTransaction = Transaction.builder()
@@ -96,7 +97,7 @@ public class TransactionService {
 
             final Balance recipientBalance = balanceRepository.findBalanceByAccountIdWithLock(transferOperation.getRecipientId());
 
-            recipientBalance.setAmount(recipientBalance.getAmount() + amount);
+            recipientBalance.setAmount(recipientBalance.getAmount().add(amount));
             balanceRepository.updateBalance(recipientBalance);
 
             log.info("Transaction with OperationUUID: {} committed", operationUuid);
